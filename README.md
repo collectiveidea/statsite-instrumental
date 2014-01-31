@@ -1,5 +1,7 @@
 # statsite-instrumental
 
+[![Build Status](https://travis-ci.org/collectiveidea/statsite-instrumental.png?branch=master)](https://travis-ci.org/collectiveidea/statsite-instrumental)
+
 This project is a sink for [statsite](https://github.com/armon/statsite)
 and [Instrumental](https://instrumentalapp.com) written in Go.
 
