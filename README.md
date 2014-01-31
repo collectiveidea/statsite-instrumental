@@ -28,7 +28,7 @@ Example: `--prefix 'production.'`
 A string that is added at the end of each tag sent to Instrumental. It's good
 practice to start the postfix with a `.`.
 
-Example: `--prefix \`hostname\``
+Example: `` --prefix `hostname` ``
 
 ### --timeout
 
