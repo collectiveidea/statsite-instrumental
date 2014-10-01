@@ -19,6 +19,8 @@ const (
 	DefaultHost    = "collector.instrumentalapp.com"
 	DefaultPort    = 8000
 	DefaultTimeout = time.Minute
+
+	DefaultStatsitePort = 8125
 )
 
 var (
@@ -37,22 +39,29 @@ var (
 )
 
 type config struct {
-	Host    string
-	Port    int
-	Token   string
-	Prefix  string
-	Postfix string
-	Timeout time.Duration
+	Host         string
+	Port         int
+	StatsitePort int
+	Token        string
+	Prefix       string
+	Postfix      string
+	Timeout      time.Duration
 }
 
 func (c *config) HostWithPort() string {
 	return c.Host + ":" + strconv.Itoa(c.Port)
 }
 
+func (c *config) StatsiteHostWithPort() string {
+	return ":" + strconv.Itoa(c.StatsitePort)
+}
+
 func configureFromFlags() {
 	flag.StringVar(&Config.Host, "host", DefaultHost, "agent host")
 	flag.IntVar(&Config.Port, "port", DefaultPort, "agent port")
 	flag.DurationVar(&Config.Timeout, "timeout", DefaultTimeout, "agent timeout")
+
+	flag.IntVar(&Config.StatsitePort, "statsite_port", DefaultStatsitePort, "statsite feedback port (0 to disable)")
 
 	flag.StringVar(&Config.Prefix, "prefix", "", "Prepended to all keys (useful to end with a .)")
 	flag.StringVar(&Config.Postfix, "postfix", "", "Appended to all keys (useful to start with a .)")
@@ -91,6 +100,7 @@ func expandKey(original string) (key, action string) {
 
 func funnel(input io.Reader, output io.Writer) (err error) {
 	scanner := bufio.NewScanner(input)
+	gauges := []string{}
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -101,6 +111,10 @@ func funnel(input io.Reader, output io.Writer) (err error) {
 		if len(parts) == 3 && action != "" {
 			value := parts[1]
 			timestamp := parts[2]
+
+			if action == "gauge" {
+				gauges = append(gauges, fmt.Sprintf("%s:%s|g", key, value))
+			}
 
 			params := []interface{}{
 				action,
@@ -117,6 +131,8 @@ func funnel(input io.Reader, output io.Writer) (err error) {
 			}
 		}
 	}
+
+	feedGaugesBackToStatsite(gauges)
 
 	err = scanner.Err()
 
@@ -148,6 +164,26 @@ func connect() (conn net.Conn, err error) {
 	}
 
 	return
+}
+
+// Statsite gauges are reset back to 0 after the sink flush.
+// The recommended solution (aka to make statsite work like statsd) is to feed
+// gauge values back into statsite to reset the value back to what it was.
+//
+// From https://github.com/armon/statsite/issues/69
+func feedGaugesBackToStatsite(stats []string) {
+	if Config.StatsitePort == 0 {
+		return
+	}
+
+	conn, err := net.DialTimeout("udp", Config.StatsiteHostWithPort(), Config.Timeout)
+	if err != nil {
+		return
+	}
+
+	for _, stat := range stats {
+		fmt.Fprintf(conn, "%s\n", stat)
+	}
 }
 
 func main() {
