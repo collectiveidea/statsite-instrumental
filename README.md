@@ -50,3 +50,8 @@ change this.
 
 The Instrumental collector agent port to connect on. Again, unlikely to have to
 change this.
+
+### --statsite-port
+
+The local UDP port of the statsite daemon for feeding stats back into statsite,
+like gauges, in order to make them behave more like statsd. Set to 0 to disable.

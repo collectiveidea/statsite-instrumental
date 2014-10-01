@@ -3,8 +3,10 @@ package main
 import (
 	"bytes"
 	"github.com/bmizerany/assert"
+	"github.com/stvp/go-udp-testing"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestExpandKeyIncrementsHistogram(t *testing.T) {
@@ -87,6 +89,32 @@ func TestFunnelPrefix(t *testing.T) {
 	}
 
 	assert.Equal(t, "increment blarg.numbers.baz 1 1400000000\n", output.String())
+
+	Config = before_config
+}
+
+func TestFeedGaugesBackToStatsite(t *testing.T) {
+	// Global state sucks
+	before_config := Config
+
+	Config = &config{
+		StatsitePort: 12345,
+		Timeout:      time.Second,
+	}
+
+	udp.SetAddr(":12345")
+
+	udp.ShouldReceiveOnly(t, "numbers:1|g\n", func() {
+		input := bytes.NewBuffer(make([]byte, 0))
+		input.Write([]byte("gauges.numbers|1|1400000000\n"))
+		input.Write([]byte("timers.event.p95|1.899065|1391189890\n"))
+
+		output := bytes.NewBuffer(make([]byte, 0))
+
+		if err := funnel(input, output); err != nil {
+			t.Fatal(err)
+		}
+	})
 
 	Config = before_config
 }
