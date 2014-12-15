@@ -2,9 +2,10 @@ package main
 
 import (
 	"bytes"
-	"github.com/bmizerany/assert"
 	"strings"
 	"testing"
+
+	"github.com/bmizerany/assert"
 )
 
 func TestExpandKeyIncrementsHistogram(t *testing.T) {
@@ -32,7 +33,7 @@ func TestExpandKeyMapsAction(t *testing.T) {
 	tests := map[string]string{
 		"gauges.X": "gauge",
 		"counts.X": "increment",
-		"timers.X": "gauge_absolute",
+		"timers.X": "gauge",
 		"sets.X":   "gauge_absolute",
 	}
 
@@ -64,7 +65,7 @@ func TestFunnel(t *testing.T) {
 
 	assert.Equal(t, 5, len(lines))
 	assert.Equal(t, "increment times_occurred 20.000000 1391189888", lines[0])
-	assert.Equal(t, "gauge_absolute event.p95 1.899065 1391189890", lines[1])
+	assert.Equal(t, "gauge event.p95 1.899065 1391189890", lines[1])
 	assert.Equal(t, "gauge number 200.000000 1391189899", lines[2])
 	assert.Equal(t, "gauge_absolute mappings 4 1391189900", lines[3])
 	assert.Equal(t, "", lines[4])

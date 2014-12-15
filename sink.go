@@ -25,7 +25,7 @@ var (
 	// Mapping of key prefix given by statsite to the action that should be passed
 	// to Instrumental.
 	Actions = map[string]string{
-		"timers":    "gauge_absolute",
+		"timers":    "gauge",
 		"sets":      "gauge_absolute",
 		"gauges":    "gauge",
 		"counts":    "increment",
