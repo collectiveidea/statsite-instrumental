@@ -10,7 +10,13 @@ and [Instrumental](https://instrumentalapp.com) written in Go.
 ```ini
 [statsite]
 stream_cmd = statsite-instrumental this_is_your_token
+flush_interval = 60
 ```
+
+It is important to set the `flush_interval` to 60s as that is the highest
+resolution supported by Instrumental. If the default of 10 seconds is kept then
+only the last value flushed will be stored. This can cause misleading metrics
+as it will not reflect the correct percentiles, uppers, lowers, etc...
 
 ## Usage
 
